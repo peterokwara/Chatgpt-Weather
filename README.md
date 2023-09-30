@@ -22,7 +22,7 @@ A web app that gives you the weather of any city in the world.
 This is a web app that gives you the weather of any city in the world. It is built using NextJs App Router, tailwindcss, ai, openai.
 
 <p align="center">
-  <img src="./assets/ChatWeather.gif"/>
+  <video src="./assets/ChatWeather.mp4" autoplay/>
 </p>
 
 ### Technical
