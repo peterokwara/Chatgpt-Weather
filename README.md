@@ -58,7 +58,7 @@ Ensure that you use app router and tailwindcss
 2. Install the following packages
 
 ```console
-pnpm install ai openai clsx react-markdown react-textarea-autosize react-gfm
+pnpm install ai openai@4.10.0 clsx react-markdown react-textarea-autosize react-gfm
 ```
 
 Here is what the packages do
