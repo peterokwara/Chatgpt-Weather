@@ -22,7 +22,7 @@ A web app that gives you the weather of any city in the world.
 This is a web app that gives you the weather of any city in the world. It is built using NextJs App Router, tailwindcss, ai, openai.
 
 <p align="center">
-  <video src="./assets/ChatWeather.mp4" autoplay/>
+  <img src="./assets/ChatWeather.gif"/>
 </p>
 
 ### Technical
@@ -78,184 +78,233 @@ OPENAI_API_KEY=
 WEATHER_API_KEY=
 ```
 
-4. `useChat` is a utility to allow you to easily create a conversational user interface for your chatbot application. It enables the streaming of chat messages from your AI provider, manages the state for chat input, and updates the UI automatically as new messages are received.
+4. Let's start building the layout. Open the `app/page.tsx` file and replace the content with the following
 
-```html
-<main class="mt-32">
-  <div class="px-4 pb-12 mx-auto max-w-7xl sm:px-6 lg:px-8">
-    <form class="space-y-8 divide-y divide-gray-200" on:submit="{handleSubmit}">
-      <div class="pt-8">
-        <div>
-          <h3 class="text-lg font-medium leading-6 text-gray-900">
-            Business name generator
-          </h3>
-          <p class="mt-1 text-sm text-gray-500">
-            Generates a list of business names.
-          </p>
-        </div>
-        <div class="grid grid-cols-1 mt-6 gap-y-6 gap-x-4 sm:grid-cols-6">
-          <div class="sm:col-span-3">
-            <label
-              for="industry"
-              class="block text-sm font-medium text-gray-700"
-            >
-              Industry
-            </label>
-            <div class="mt-1">
-              <input
-                bind:value="{industry}"
-                type="text"
-                name="industry"
-                id="industry"
-                required
-                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-          <div class="sm:col-span-3">
-            <label for="tone" class="block text-sm font-medium text-gray-700">
-              Desired tone/style
-            </label>
-            <div class="mt-1">
-              <input
-                bind:value="{tone}"
-                id="tone"
-                name="tone"
-                type="text"
-                required
-                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-          <div class="sm:col-span-6">
-            <label
-              for="keywords"
-              class="block text-sm font-medium text-gray-700"
-            >
-              Keywords
-            </label>
-            <div class="mt-1">
-              <input
-                bind:value="{keywords}"
-                type="text"
-                name="keywords"
-                id="keywords"
-                required
-                class="block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-              />
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled="{!isLoading}"
-            class="inline-flex justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Generate
-          </button>
-
-          {#if $completion}
-          <div class="sm:col-span-6">
-            <label for="about" class="block text-sm font-medium text-gray-700">
-              Suggestions
-            </label>
-            <textarea
-              id="suggestions"
-              name="suggestions"
-              rows="10"
-              value="{$completion}"
-              class="block w-full border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-            />
-          </div>
-          {/if}
-        </div>
-      </div>
-    </form>
-  </div>
-</main>
+```jsx
+"use client";
+export default function Chat() {
+  return (
+    <main className="flex flex-col items-center justify-between pb-40"></main>
+  );
+}
 ```
 
-7. Create the script to handle the form submission
+5. `useChat` is a utility to allow you to easily create a conversational user interface for your chatbot application. It enables the streaming of chat messages from your AI provider, manages the state for chat input, and updates the UI automatically as new messages are received.
 
-```html
-<script>
-  import { useCompletion } from "ai/svelte";
+We need to set it up. Set up `useChat` and it's code.
 
-  const { complete, isLoading, completion } = useCompletion();
+```jsx
+"use client";
+import { useChat } from "ai/react";
 
-  let keywords = "";
-  let industry = "";
-  let tone = "";
+export default function Chat() {
+  const { messages, input, setInput, handleSubmit, isLoading } = useChat();
 
-  function handleSubmit() {
-    console.log("submitting");
-    complete(
-      JSON.stringify({
-        keywords: keywords,
-        industry: industry,
-        tone: tone,
-      })
-    );
-  }
-</script>
+  return (
+    <main className="flex flex-col items-center justify-between pb-40"></main>
+  );
+}
 ```
 
-8. Create the backend server code on 'routes/api/completion/+server.js'
+6. We will first need to create a form that will be used to send messages to the AI. We will use the `useChat` hook to handle the form submission. We will also use the `isLoading` property to disable the send button while the AI is processing the message.
 
-```js
-import { Configuration, OpenAIApi } from "openai-edge";
+Some extras are needed to make the form look good. We will use the `clsx` package to conditionally apply classes to the send button. We will also use the `react-textarea-autosize` package to create a textarea that automatically resizes based on its content.
+
+Icons are also needed. We will use the `lucide-react` package to render icons from the Lucide icon set.
+
+```jsx
+<div className="fixed bottom-0 flex w-full flex-col items-center space-y-3 bg-gradient-to-b from-transparent via-gray-100 to-gray-100 p-5 pb-3 sm:px-0">
+  <form
+    ref={formRef}
+    onSubmit={handleSubmit}
+    className="relative w-full max-w-screen-md rounded-xl border border-gray-200 bg-white px-4 pb-2 pt-3 shadow-lg sm:pb-3 sm:pt-4"
+  >
+    <Textarea
+      ref={inputRef}
+      tabIndex={0}
+      required
+      rows={1}
+      autoFocus
+      placeholder="Send a message"
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          formRef.current?.requestSubmit();
+          e.preventDefault();
+        }
+      }}
+      spellCheck={false}
+      className="w-full pr-10 focus:outline-none"
+    />
+    <button
+      className={clsx(
+        "absolute inset-y-0 right-3 my-auto flex h-8 w-8 items-center justify-center rounded-md transition-all",
+        disabled
+          ? "cursor-not-allowed bg-white"
+          : "bg-green-500 hover:bg-green-600"
+      )}
+      disabled={disabled}
+    >
+      {isLoading ? (
+        <LoadingCircle />
+      ) : (
+        <SendIcon
+          className={clsx(
+            "h-4 w-4",
+            input.length === 0 ? "text-gray-300" : "text-white"
+          )}
+        />
+      )}
+    </button>
+  </form>
+</div>
+```
+
+```jsx
+import { useRef } from "react";
+import Textarea from "react-textarea-autosize";
+import clsx from "clsx";
+import { LoadingCircle, SendIcon } from "./icons";
+import ReactMarkdown from "react-markdown";
+import { Bot, User } from "lucide-react";
+import remarkGfm from "remark-gfm";
+```
+
+Also some customs are icons and are defined in the `./icons.tsx` file
+
+```tsx
+export const LoadingCircle = () => {
+  return (
+    <svg
+      aria-hidden="true"
+      className="h-4 w-4 animate-spin fill-stone-600 text-stone-200"
+      viewBox="0 0 100 101"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z"
+        fill="currentColor"
+      />
+      <path
+        d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z"
+        fill="currentFill"
+      />
+    </svg>
+  );
+};
+
+export const SendIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      fill="none"
+      className={className}
+      strokeWidth="2"
+    >
+      <path
+        d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z"
+        fill="currentColor"
+      ></path>
+    </svg>
+  );
+};
+```
+
+We need to create references to the form and input section using the `useRef` hook. Additionally, we will use the `useState` hook to manage the state of the input field.
+
+```jsx
+const formRef = useRef < HTMLFormElement > null;
+const inputRef = useRef < HTMLTextAreaElement > null;
+const disabled = isLoading || input.length === 0;
+```
+
+7. Create the backend server code on 'routes/api/chat/route.ts'
+
+```tsx
+import { OpenAI } from "openai";
 import { OpenAIStream, StreamingTextResponse } from "ai";
-import { OPENAI_API_KEY } from "$env/static/private";
+import { functions, runFunction } from "./functions";
 
-const config = new Configuration({
-  apiKey: OPENAI_API_KEY,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-const openai = new OpenAIApi(config);
+export async function POST(req: Request) {
+  const { messages } = await req.json();
 
-export async function POST({ request }) {
-  const { prompt } = await request.json();
-
-  const { keywords, tone, industry } = JSON.parse(prompt);
-
-  const payload = {
+  // check if the conversation requires a function call to be made
+  const initialResponse = await openai.chat.completions.create({
     model: "gpt-3.5-turbo-0613",
-    messages: [
-      {
-        role: "user",
-        content: `Given an industry, a set of keywords, and a tone, generate 10 business ideas for a company in the industry that are associated with the keywords and match the tone. 
-                    The industry is ${industry}, the keywords are ${keywords}, and the tone is ${tone}. 
-                    Each business idea should be a short sentence or phrase that describes the idea. `,
-      },
-    ],
-    temperature: 0.9,
+    messages,
     stream: true,
-  };
+    functions,
+    function_call: "auto",
+  });
 
-  // Ask OpenAI for a streaming completion given the prompt
-  const response = await openai.createChatCompletion(payload);
+  const stream = OpenAIStream(initialResponse, {
+    experimental_onFunctionCall: async (
+      { name, arguments: args },
+      createFunctionCallMessages
+    ) => {
+      const result = await runFunction(name, args);
+      const newMessages = createFunctionCallMessages(result);
+      return openai.chat.completions.create({
+        model: "gpt-3.5-turbo-0613",
+        stream: true,
+        messages: [...messages, ...newMessages],
+      });
+    },
+  });
 
-  // Convert the response into a friendly text-stream
-  const stream = OpenAIStream(response);
-  // Respond with the stream
   return new StreamingTextResponse(stream);
 }
 ```
 
-#### CONTRIBUTING
+8. Create a functions file on 'routes/api/chat/functions.ts' The function will be used to get the weather data of a city
 
-I would/ We'd love to have your help in making **business name generator** better. The project is still very incomplete, but if there's an issue you'd like to see addressed sooner rather than later, let me(/us) know.
+```tsx
+import { type CompletionCreateParams } from "openai/resources/chat/index";
 
-Before you contribute though read the contributing guide here: [Contributing.md](https://github.com/peterokwara/business-name-generator/blob/master/CONTRIBUTING.md)
+export const functions: CompletionCreateParams.Function[] = [
+  {
+    name: "get_weather_data",
+    description: "Get the current weather in a given location",
+    parameters: {
+      type: "object",
+      properties: {
+        location: {
+          type: "string",
+          description: "The city and state, e.g. San Francisco, CA",
+        },
+      },
+      required: ["location"],
+    },
+  },
+];
 
-For any concerns, please open an [issue](https://github.com/peterokwara/business-name-generator/issues), or JUST, [fork the project and send a pull request](https://github.com/peterokwara/business-name-generator/pulls).
+export async function get_weather_data(location: string) {
+  return fetch(
+    `http://api.weatherapi.com/v1/current.json?key=${process.env.WEATHER_API_KEY}&q=${location}&aqi=no`,
+    { next: { revalidate: 60 } }
+  ).then((res) => res.json());
+}
 
-<hr>
+export async function runFunction(name: string, args: any) {
+  switch (name) {
+    case "get_weather_data":
+      return await get_weather_data(args["location"]);
+    default:
+      return null;
+  }
+}
+```
 
 ### License
 
-- see [LICENSE](https://github.com/peterokwara/business-name-generator/blob/master/LICENSE) file
+- see [LICENSE](https://github.com/peterokwara/Chatgpt-Weather/blob/main/LICENSE) file
 
 ### Versions
 
@@ -263,7 +312,7 @@ For any concerns, please open an [issue](https://github.com/peterokwara/business
 
 ### Contact Information
 
-If you have found any bugs, or have any feedback or questions and or want to post a feature request please use the [Issuetracker](https://github.com/peterokwara/business-name-generator/issues) to report them.
+If you have found any bugs, or have any feedback or questions and or want to post a feature request please use the [Issuetracker](https://github.com/peterokwara/Chatgpt-Weather/issues) to report them.
 
 <hr>
 
